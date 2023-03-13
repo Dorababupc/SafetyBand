@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "484016021096",
+    "project_id": "coffee-orde-6e3e3",
+    "storage_bucket": "coffee-orde-6e3e3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:484016021096:android:17ecb58c1bee96856125dd",
+        "android_client_info": {
+          "package_name": "com.example.coffee_order"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "484016021096-esvm5io9phce55ngmslmu6sjge6c8su3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2OmgSnqNJJvYdu3IQvJrGcnXJXOzGQRA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "484016021096-esvm5io9phce55ngmslmu6sjge6c8su3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

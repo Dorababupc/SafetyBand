@@ -4,6 +4,7 @@ import android.gesture.GestureLibraries;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -30,8 +31,16 @@ public class myAdapter extends FirebaseRecyclerAdapter<Model,holder> {
     protected void onBindViewHolder(@NonNull holder holder, int position, @NonNull Model model) {
         holder.course.setText(model.getCourse());
         holder.name.setText(model.getName());
+        Model m=model;
         holder.email.setText(model.getEmail());
         Glide.with(holder.img.getContext()).load(model.getPurl()).into(holder.img);
+        holder.img.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast toast = Toast.makeText(holder.img.getContext(),m.getName(), Toast.LENGTH_LONG);
+                toast.show();
+            }
+        });
     }
 
     @NonNull
