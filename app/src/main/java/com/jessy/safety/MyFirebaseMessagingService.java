@@ -141,18 +141,23 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
-
+import android.R.layout;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.annotations.Nullable;
 import com.google.firebase.functions.FirebaseFunctions;
 import com.google.firebase.functions.HttpsCallableResult;
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -165,13 +170,24 @@ import java.util.Map;
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private static final String TAG = "MyFirebaseMsgService";
     private FusedLocationProviderClient mFusedLocationClient;
-
+    private String tok="ffUCGcb4TleDjnzYdvCJOl:APA91bHUdiMsQTAq06JgBqC6SX4pIyz3xL0ChlSFySe6OdhutSykZctURpQZTuylrpSedFFnXJEpnb62JgIlOwemxYNuBiAowz-1j1u8a-ln8666zS9iMadNoNJmbfYM4ESkx2SY-9KW";
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
         if (remoteMessage.getData().size() > 0) {
-            String message = remoteMessage.getData().get("location_request");
-            startLocationUpdates();
+
+            if (remoteMessage.getData().get("type").equals("location_request")) {
+                startLocationUpdates();
+            } else {
+                if (remoteMessage.getData().containsKey("long")) {
+                    String myValue = remoteMessage.getData().get("long");
+                    if (myValue != null) {
+                        // use myValue here
+                        Log.d("this is",myValue);
+                    }
+                }
+
+            }
         }
     }
 
@@ -210,24 +226,23 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private void sendLocationToCloudFunction(double latitude, double longitude) {
         // Prepare data to send to the cloud function
-        Map<String, Object> data = new HashMap<>();
-        data.put("latitude", latitude);
-        data.put("longitude", longitude);
-        Log.d("check",""+latitude);
-        // Send the data to the cloud function using Firebase Functions
-        FirebaseFunctions.getInstance().getHttpsCallable("updateLocation")
-                .call(data)
-                .addOnCompleteListener(new OnCompleteListener<HttpsCallableResult>() {
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference ref = database.getReference("saviours/" + tok);
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("latitude", latitude);
+        updates.put("longitude", longitude);
+
+        ref.updateChildren(updates)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
-                    public void onComplete(@NonNull Task<HttpsCallableResult> task) {
-                        if (task.isSuccessful() && task.getResult() != null) {
-                            Log.d(TAG, "Location sent to cloud function successfully.");
-                        } else {
-                            Log.w(TAG, "Failed to send location to cloud function.");
-                            if (task.getException() != null) {
-                                Log.e(TAG, "Error sending location: " + task.getException().getMessage());
-                            }
-                        }
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "Location updated for token: " + tok);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, "Error updating location for token: " + tok, e);
                     }
                 });
     }
@@ -237,6 +252,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Send the new token to the server here
         // This method will be called whenever the app receives a new FCM token
         // You can use this token to send push notifications to the app from your cloud function
+        tok=token;
         Log.d("TAG", "Refreshed token: " + token);
 
 //        // Save the token to Firebase Realtime Database
