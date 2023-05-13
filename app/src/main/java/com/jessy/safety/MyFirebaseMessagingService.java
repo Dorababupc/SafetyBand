@@ -141,6 +141,7 @@ import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.media.AudioManager;
@@ -216,12 +217,15 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         startActivity(intent);
                     } else {
                         // If the app is not in the foreground, save the intent to Google Maps.
-                        intentToGoogleMaps = new Intent(Intent.ACTION_VIEW);
+                        intentToGoogleMaps= new Intent(Intent.ACTION_VIEW);
                         Uri uri = Uri.parse("geo:0,0?q=" + latitude + "," + longitude);
                         intentToGoogleMaps.setData(uri);
                         intentToGoogleMaps.setPackage("com.google.android.apps.maps");
                         // Add the FLAG_ACTIVITY_NEW_TASK flag to the Intent object.
-                        intentToGoogleMaps.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        intentToGoogleMaps.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        SharedPreferences.Editor editor = getApplicationContext().getSharedPreferences("myPrefs", MODE_PRIVATE).edit();
+                        editor.putString("intentToGoogleMaps", intentToGoogleMaps.toUri(Intent.URI_INTENT_SCHEME));
+                        editor.apply();
                     }
                 }
 
