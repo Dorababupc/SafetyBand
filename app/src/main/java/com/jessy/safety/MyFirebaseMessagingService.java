@@ -137,8 +137,12 @@
 //}
 package com.jessy.safety;
 
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
@@ -164,6 +168,7 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -174,16 +179,34 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
+        MediaPlayer mediaPlayer = MediaPlayer.create(this, R.raw.alarm);
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                mediaPlayer.release();
+            }
+        });
+
+        mediaPlayer.start();
         if (remoteMessage.getData().size() > 0) {
 
             if (remoteMessage.getData().get("type").equals("location_request")) {
                 startLocationUpdates();
             } else {
                 if (remoteMessage.getData().containsKey("long")) {
-                    String myValue = remoteMessage.getData().get("long");
-                    if (myValue != null) {
-                        // use myValue here
-                        Log.d("this is",myValue);
+                    String longitude = remoteMessage.getData().get("long");
+                    String latitude =remoteMessage.getData().get("lat");
+                    if (longitude != null && latitude!=null) {
+                        // Create a new Intent object with the ACTION_VIEW action.
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                        Uri uri = Uri.parse("geo:0,0?q=" + latitude + "," + longitude);
+                        intent.setData(uri);
+                        intent.setPackage("com.google.android.apps.maps");
+                        // Add the FLAG_ACTIVITY_NEW_TASK flag to the Intent object.
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
                     }
                 }
 
