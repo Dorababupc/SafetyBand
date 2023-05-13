@@ -137,6 +137,9 @@
 //}
 package com.jessy.safety;
 
+import android.app.ActivityManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -170,9 +173,11 @@ import com.google.firebase.messaging.RemoteMessage;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
+    private Intent intentToGoogleMaps;
     private static final String TAG = "MyFirebaseMsgService";
     private FusedLocationProviderClient mFusedLocationClient;
     private String tok="ffUCGcb4TleDjnzYdvCJOl:APA91bHUdiMsQTAq06JgBqC6SX4pIyz3xL0ChlSFySe6OdhutSykZctURpQZTuylrpSedFFnXJEpnb62JgIlOwemxYNuBiAowz-1j1u8a-ln8666zS9iMadNoNJmbfYM4ESkx2SY-9KW";
@@ -195,10 +200,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             if (remoteMessage.getData().get("type").equals("location_request")) {
                 startLocationUpdates();
             } else {
+
                 if (remoteMessage.getData().containsKey("long")) {
                     String longitude = remoteMessage.getData().get("long");
                     String latitude =remoteMessage.getData().get("lat");
-                    if (longitude != null && latitude!=null) {
+                    if (isAppInForeground()) {
+                        // TODO: Display notification here.
                         // Create a new Intent object with the ACTION_VIEW action.
                         Intent intent = new Intent(Intent.ACTION_VIEW);
                         Uri uri = Uri.parse("geo:0,0?q=" + latitude + "," + longitude);
@@ -207,11 +214,41 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         // Add the FLAG_ACTIVITY_NEW_TASK flag to the Intent object.
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
+                    } else {
+                        // If the app is not in the foreground, save the intent to Google Maps.
+                        intentToGoogleMaps = new Intent(Intent.ACTION_VIEW);
+                        Uri uri = Uri.parse("geo:0,0?q=" + latitude + "," + longitude);
+                        intentToGoogleMaps.setData(uri);
+                        intentToGoogleMaps.setPackage("com.google.android.apps.maps");
+                        // Add the FLAG_ACTIVITY_NEW_TASK flag to the Intent object.
+                        intentToGoogleMaps.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     }
                 }
 
             }
         }
+    }
+//    @Override
+//    public void onNewIntent(Intent intent) {
+//        super.onNewIntent(intent);
+//
+//        if (intentToGoogleMaps != null) {
+//            startActivity(intentToGoogleMaps);
+//            intentToGoogleMaps = null;
+//        }
+//    }
+
+    /**
+     * Checks if the app is in the foreground.
+     */
+    private boolean isAppInForeground() {
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningTaskInfo> runningTasks = activityManager.getRunningTasks(1);
+        if (runningTasks != null && !runningTasks.isEmpty()) {
+            ComponentName componentName = runningTasks.get(0).topActivity;
+            return componentName.getPackageName().equals(getPackageName());
+        }
+        return false;
     }
 
     private void startLocationUpdates() {
